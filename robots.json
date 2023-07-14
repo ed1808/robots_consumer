@@ -1,0 +1,7 @@
+{
+    "delay": 5,
+    "robotsUrls": [
+        "https://rylsa.dms.red/v2_base/tester.php",
+        "https://rylsa.dms.red/v2_base/tester2.php"
+    ]
+}
