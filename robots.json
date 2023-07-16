@@ -2,6 +2,7 @@
     "delay": 2,
     "robotsUrls": [
         "url1",
-        "url2"
+        "url2",
+        "url3"
     ]
 }
