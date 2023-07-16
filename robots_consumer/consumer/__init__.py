@@ -1,0 +1,1 @@
+from .robots_consumer import RobotConsumer
