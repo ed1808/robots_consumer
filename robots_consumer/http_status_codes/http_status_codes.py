@@ -66,6 +66,30 @@ class HttpStatusCodes(Enum):
     HTTP_511_NETWORK_AUTHENTICATION_REQUIRED = 511
 
 
+RESPONSE_CODES = {
+    HttpStatusCodes.HTTP_100_CONTINUE.value: { 'message': 'CONTINUE' },
+    HttpStatusCodes.HTTP_101_SWITCHING_PROTOCOLS.value: { 'message': 'SWITCHING_PROTOCOLS' },
+    HttpStatusCodes.HTTP_200_OK.value: { 'message': 'OK' },
+    HttpStatusCodes.HTTP_201_CREATED.value: { 'message': 'CREATED' },
+    HttpStatusCodes.HTTP_202_ACCEPTED.value: { 'message': 'ACCEPTED' },
+    HttpStatusCodes.HTTP_203_NON_AUTHORITATIVE_INFORMATION.value: { 'message': 'NON_AUTHORITATIVE_INFORMATION' },
+    HttpStatusCodes.HTTP_204_NO_CONTENT.value: { 'message': 'NO_CONTENT' },
+    HttpStatusCodes.HTTP_205_RESET_CONTENT.value: { 'message': 'RESET_CONTENT' },
+    HttpStatusCodes.HTTP_206_PARTIAL_CONTENT.value: { 'message': 'PARTIAL_CONTENT' },
+    HttpStatusCodes.HTTP_207_MULTI_STATUS.value: { 'message': 'MULTI_STATUS' },
+    HttpStatusCodes.HTTP_208_ALREADY_REPORTED.value: { 'message': 'ALREADY_REPORTED' },
+    HttpStatusCodes.HTTP_226_IM_USED.value: { 'message': 'IM_USED' },
+    HttpStatusCodes.HTTP_300_MULTIPLE_CHOICES.value: { 'message': 'MULTIPLE_CHOICES' },
+    HttpStatusCodes.HTTP_301_MOVED_PERMANENTLY.value: { 'message': 'MOVED_PERMANENTLY' },
+    HttpStatusCodes.HTTP_302_FOUND.value: { 'message': 'FOUND' },
+    HttpStatusCodes.HTTP_303_SEE_OTHER.value: { 'message': 'SEE_OTHER' },
+    HttpStatusCodes.HTTP_304_NOT_MODIFIED.value: { 'message': 'NOT_MODIFIED' },
+    HttpStatusCodes.HTTP_305_USE_PROXY.value: { 'message': 'USE_PROXY' },
+    HttpStatusCodes.HTTP_306_RESERVED.value: { 'message': 'RESERVED' },
+    HttpStatusCodes.HTTP_307_TEMPORARY_REDIRECT.value: { 'message': 'TEMPORARY_REDIRECT' },
+    HttpStatusCodes.HTTP_308_PERMANENT_REDIRECT.value: { 'message': 'PERMANENT_REDIRECT' },
+}
+
 CLIENT_ERRORS_DICT = {
     HttpStatusCodes.HTTP_400_BAD_REQUEST.value: { 'message': 'BAD_REQUEST' },
     HttpStatusCodes.HTTP_401_UNAUTHORIZED.value: { 'message': 'UNAUTHORIZED' },

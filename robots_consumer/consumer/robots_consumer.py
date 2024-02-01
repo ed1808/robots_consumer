@@ -1,17 +1,28 @@
+import smtplib
+import ssl
 import json
 import os
+import time
+from email.message import EmailMessage
 from pathlib import Path
-from time import sleep
+from time import sleep, struct_time
 from typing import Dict
 
 import requests
-from http_status_codes import CLIENT_ERRORS_DICT, SERVER_ERRORS_DICT
 from simple_colors import *
+
+from http_status_codes import RESPONSE_CODES
 
 
 class RobotConsumer:
+    __smtp_server: str = 'smtp.gmail.com'
+    __port: int = 587
+    __context = ssl.create_default_context()
+    __message = EmailMessage()
     __consumer_config: Dict = {}
-    __error_detail: str = ''
+    __error_flag: bool = False
+    __error: str = ''
+    __current_time: struct_time = time.localtime(time.time())
     __BAR_LEN = 24
     __BAR_ELEMENTS = ['-', '\\', '|', '/']
 
@@ -45,37 +56,49 @@ class RobotConsumer:
 
         try:
             while True:
-                for url in self.__consumer_config['robotsUrls']:
-                    print(
-                        f'{green("[CONSUMER MESSAGE]", "bold")} Consultando {url}')
-
-                    try:
-                        response = requests.get(url)
-
-                        if response.status_code in CLIENT_ERRORS_DICT:
-                            self.__error_detail = CLIENT_ERRORS_DICT[response.status_code].get(
-                                'message')
-                        elif response.status_code in SERVER_ERRORS_DICT:
-                            self.__error_detail = SERVER_ERRORS_DICT[response.status_code].get(
-                                'message')
-
-                        if self.__error_detail != '':
-                            message = f"""{red("[CONSUMER MESSAGE]", "bold")} Ha ocurrido un error en la URL {url}
-            {red("Código:", "bold")} {response.status_code}
-             {red("Error:", "bold")} {self.__error_detail}"""
-
-                            print(message)
-
-                            continue
-
-                    except Exception:
+                if time.strftime('%H:%M', self.__current_time) > self.__consumer_config['startTime'] and time.strftime('%H:%M', self.__current_time) < self.__consumer_config['stopTime']:
+                    for url in self.__consumer_config['robotsUrls']:
                         print(
-                            f'{red("[CONSUMER MESSAGE]", "bold")} No hay conexión a internet')
+                            f'{green("[CONSUMER MESSAGE]", "bold")} Consultando {url}')
 
-                    sleep(self.__consumer_config['delay'])
+                        try:
+                            response = requests.get(url, timeout=60)
+                            response.raise_for_status()
+
+                            print(
+                                f'{green("[CONSUMER MESSAGE]", "bold")} {time.strftime("%H:%M:%S", self.__current_time)}: Respuesta {response.status_code} {RESPONSE_CODES[response.status_code].get("message")}')
+
+                        except requests.exceptions.HTTPError as e:
+                            print(
+                                f'{red("[CONSUMER MESSAGE]", "bold")} {time.strftime("%H:%M:%S", self.__current_time)}: Ha ocurrido el siguiente error:\n\n{e}\n')
+
+                            self.__error_flag = True
+                            self.__error = str(e)
+
+                            break
+
+                        finally:
+                            print(
+                                '######################################################')
+
+                        sleep(self.__consumer_config['delay'])
+                else:
+                    sleep(60.0)
+
+                if self.__error_flag:
+                    self.__send_email(self.__error)
+
+                    print(
+                        f'\n{red("[CONSUMER MESSAGE]", "bold")} {time.strftime("%H:%M:%S", self.__current_time)}: Ejecución detenida debido a un error\n')
+                    print('######################################################')
+
+                    exit(-1)
+
+                self.__current_time = time.localtime(time.time())
 
         except KeyboardInterrupt:
-            print(f'{yellow("[CONSUMER MESSAGE]", "bold")} Ejecución detenida')
+            print(
+                f'{yellow("[CONSUMER MESSAGE]", "bold")} {time.strftime("%H:%M:%S", self.__current_time)}: Ejecución detenida')
 
     def __get_dirpath(self) -> str | None:
         """
@@ -142,3 +165,28 @@ class RobotConsumer:
         dir_files = os.listdir(self.__dirpath)
 
         return self.__filename in dir_files
+
+    def __send_email(self, error) -> None:
+        try:
+            server = smtplib.SMTP(self.__smtp_server, self.__port)
+            server.starttls(context=self.__context)
+            server.login(
+                self.__consumer_config['sender_email'], self.__consumer_config['password'])
+
+            self.__message['Subject'] = 'Error en el robot'
+            self.__message['From'] = self.__consumer_config['sender_email']
+            self.__message['To'] = self.__consumer_config['receiver_email']
+            self.__message.set_content(
+                f'Ha ocurrido el siguiente error:\n{error}')
+
+            server.send_message(self.__message)
+
+            print(
+                f'{green("[CONSUMER MESSAGE]", "bold")} {time.strftime("%H:%M:%S", self.__current_time)}: Correo enviado.')
+
+        except Exception as e:
+            print(
+                f'{red("[CONSUMER MESSAGE]", "bold")} {time.strftime("%H:%M:%S", self.__current_time)}: Ocurrió el siguiente error:\n\n{e}')
+
+        finally:
+            server.quit()
